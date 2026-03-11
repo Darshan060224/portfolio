@@ -1,0 +1,133 @@
+== PERSONAL INFORMATION ==
+
+Name: Darshan U
+Date of Birth: 24 February 2006
+Birthplace: Coimbatore, Tamil Nadu, India
+Current Location: Coimbatore, India
+Phone: +91 9342322541
+Email: darshan060224@gmail.com
+LinkedIn: https://www.linkedin.com/in/darshan24211/
+GitHub: https://github.com/Darshan060224/
+TryHackMe: https://tryhackme.com/p/darshan060224
+
+== ABOUT DARSHAN ==
+
+Darshan U is a cybersecurity enthusiast and computer science engineering student from Coimbatore, India. He is currently studying at KGiSL Institute of Technology and is passionate about cybersecurity, ethical hacking, digital forensics, and threat analysis.
+
+His interests focus on SOC operations, vulnerability assessment and penetration testing (VAPT), digital forensics and incident response (DFIR), threat hunting, malware analysis, and SIEM engineering. He enjoys building tools, experimenting with security labs, and learning through practical platforms like TryHackMe.
+
+Darshan also has experience in application development, AI-assisted tools, and real-time systems.
+
+== EDUCATION ==
+
+College: KGiSL Institute of Technology, Coimbatore, Tamil Nadu, India
+Degree: Bachelor of Engineering in Computer Science and Engineering
+Duration: 2023 – 2027
+Semester 1 GPA: 8.55
+Semester 2 GPA: 8.38
+Semester 3 GPA: 8.52
+Semester 4 GPA: 8.64
+Semester 5 GPA: 8.15
+Current CGPA: 8.44
+
+School: Sri Ramakrishna Matric Higher Secondary School, Coimbatore, Tamil Nadu, India
+12th Board Score: 517
+Cut-off: 171
+
+== PROFESSIONAL EXPERIENCE ==
+
+Security Engineer Intern at BlackPerl
+Duration: January 2026 – February 2026
+Description: Worked in a production-grade cybersecurity environment aligned with industry practices. Gained exposure to real-world security operations and workflows.
+
+== TECHNICAL SKILLS ==
+
+Cybersecurity Tools: Nmap, Burp Suite, Metasploit, Wireshark, LinPEAS
+SOC / SIEM Tools: ELK Stack, Splunk
+Operating Systems: Kali Linux, Ubuntu, Windows
+Networking: TCP/IP, DNS, Firewalls, IDS/IPS fundamentals
+
+== DEVELOPMENT SKILLS ==
+
+Frontend: React, React Native, HTML, CSS, JavaScript, TailwindCSS, Angular
+Backend: Node.js, Express
+Databases: SQL, MongoDB, Redis
+Other Technologies: Docker, TypeScript
+
+== CYBERSECURITY INTERESTS ==
+
+SOC Operations
+Vulnerability Assessment and Penetration Testing (VAPT)
+Digital Forensics and Incident Response (DFIR)
+Threat Hunting
+Malware Analysis
+SIEM Engineering
+Security Automation
+Blockchain Security
+
+== PROJECTS ==
+
+Project: TimeScope
+Description: TimeScope is a real-time crypto and stock market analytics dashboard capable of tracking more than 50 financial assets.
+Technologies: React, TypeScript, Node.js, Express, SQL, MongoDB, Redis, Docker
+Features:
+- Real-time asset monitoring
+- Multi-timeframe analytics (1 hour, 24 hour, 7 day)
+- AI assistant called TimeX using Google Gemini API
+- Uses Retrieval-Augmented Generation (RAG) to provide AI-powered insights
+
+Project: Forensic Evidence Parsing Dashboard (FEPD)
+Description: A digital forensics analysis system designed to automatically extract and analyze forensic artifacts.
+Features:
+- Automated artifact extraction
+- Timeline reconstruction
+- Log correlation
+- Evidence parsing
+Supported Platforms: Windows, Linux, macOS, Android, iOS
+
+Project: VaultCraft
+Description: An AI-based Capture The Flag machine generator designed for cybersecurity training.
+Features:
+- Generates vulnerable machines
+- Uses more than 180 CVE vulnerability templates
+- Suggests automated exploitation chains
+- Designed for ethical hacking practice environments
+
+Project: NodeLink
+Description: A real-time chat application with mobile-first architecture.
+Technologies: Node.js backend, React Native frontend
+Features:
+- User authentication
+- Real-time messaging
+- Mobile optimized design
+
+Project: Portfolio with RAG Chatbot
+Description: A personal portfolio website with an AI-powered chatbot that answers questions about Darshan using Retrieval-Augmented Generation.
+Technologies: Next.js, React, TypeScript, Tailwind CSS, FastAPI, LangChain, FAISS, OpenAI, Sentence Transformers
+Features:
+- RAG pipeline allowing visitors to ask questions about Darshan's background
+- FAISS vector similarity search over personal profile data
+- OpenAI GPT for natural language response generation
+
+== CERTIFICATIONS ==
+
+Fortinet FCF – Introduction to the Threat Landscape 3.0
+Google Cybersecurity Professional Certificate
+Advent of Cyber 2025 – Completed 24 cybersecurity challenges
+Cisco Certified Ethical Hacker (Introductory Level)
+Ethical Hacking Essentials – EC-Council
+Intermediate Ethical Hacking
+Palo Alto – Cloud Security Fundamentals
+
+== HANDS-ON LEARNING PLATFORMS ==
+
+TryHackMe Profile: darshan060224
+Focus Areas: Web vulnerabilities, Privilege escalation, Attack simulation labs
+
+Hackviser VIP
+Ranking: Top 3 percent percentile
+Activities: 24+ hours of cybersecurity lab work in a single week, Scenario-based cybersecurity challenges, Practical attack and defense exercises
+
+== CONTACT ==
+
+Feel free to reach out via email at darshan060224@gmail.com or LinkedIn for collaboration, job opportunities, or to chat about cybersecurity and tech!

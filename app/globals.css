@@ -1,26 +1,83 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0A0F1C;
+  --bg-card: #111827;
+  --bg-card-hover: #1a2340;
+  --neon-blue: #00E5FF;
+  --neon-purple: #7B61FF;
+  --neon-pink: #FF2E88;
+  --neon-green: #00FFA3;
+  --text-primary: #E6F1FF;
+  --text-secondary: #8892B0;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-neon-blue: #00E5FF;
+  --color-neon-purple: #7B61FF;
+  --color-neon-pink: #FF2E88;
+  --color-neon-green: #00FFA3;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b #0A0F1C;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Neon glow utilities */
+.glow-blue { text-shadow: 0 0 10px #00E5FF, 0 0 40px #00E5FF44; }
+.glow-purple { text-shadow: 0 0 10px #7B61FF, 0 0 40px #7B61FF44; }
+.glow-pink { text-shadow: 0 0 10px #FF2E88, 0 0 40px #FF2E8844; }
+.glow-green { text-shadow: 0 0 10px #00FFA3, 0 0 40px #00FFA344; }
+
+.box-glow-blue { box-shadow: 0 0 15px #00E5FF33, 0 0 30px #00E5FF11; }
+.box-glow-purple { box-shadow: 0 0 15px #7B61FF33, 0 0 30px #7B61FF11; }
+.box-glow-green { box-shadow: 0 0 15px #00FFA333, 0 0 30px #00FFA311; }
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px #00E5FF55, 0 0 60px #00E5FF22; }
+  50% { box-shadow: 0 0 30px #00E5FF88, 0 0 80px #00E5FF33; }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Section styling */
+section {
+  position: relative;
+}
+
+section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #1e293b, transparent);
 }

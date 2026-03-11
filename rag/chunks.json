@@ -1,0 +1,82 @@
+[
+  {
+    "text": "[PERSONAL INFORMATION] Name: Darshan U\nDate of Birth: 24 February 2006\nBirthplace: Coimbatore, Tamil Nadu, India\nCurrent Location: Coimbatore, India\nPhone: +91 9342322541\nEmail: darshan060224@gmail.com\nLinkedIn: https://www.linkedin.com/in/darshan24211/\nGitHub: https://github.com/Darshan060224/\nTryHackMe: https://tryhackme.com/p/darshan060224",
+    "section": "PERSONAL INFORMATION"
+  },
+  {
+    "text": "[ABOUT DARSHAN] Darshan U is a cybersecurity enthusiast and computer science engineering student from Coimbatore, India. He is currently studying at KGiSL Institute of Technology and is passionate about cybersecurity, ethical hacking, digital forensics, and threat analysis.",
+    "section": "ABOUT DARSHAN"
+  },
+  {
+    "text": "[ABOUT DARSHAN] His interests focus on SOC operations, vulnerability assessment and penetration testing (VAPT), digital forensics and incident response (DFIR), threat hunting, malware analysis, and SIEM engineering. He enjoys building tools, experimenting with security labs, and learning through practical platforms like TryHackMe.",
+    "section": "ABOUT DARSHAN"
+  },
+  {
+    "text": "[ABOUT DARSHAN] Darshan also has experience in application development, AI-assisted tools, and real-time systems.",
+    "section": "ABOUT DARSHAN"
+  },
+  {
+    "text": "[EDUCATION] College: KGiSL Institute of Technology, Coimbatore, Tamil Nadu, India\nDegree: Bachelor of Engineering in Computer Science and Engineering\nDuration: 2023 \u2013 2027\nSemester 1 GPA: 8.55\nSemester 2 GPA: 8.38\nSemester 3 GPA: 8.52\nSemester 4 GPA: 8.64\nSemester 5 GPA: 8.15\nCurrent CGPA: 8.44",
+    "section": "EDUCATION"
+  },
+  {
+    "text": "[EDUCATION] School: Sri Ramakrishna Matric Higher Secondary School, Coimbatore, Tamil Nadu, India\n12th Board Score: 517\nCut-off: 171",
+    "section": "EDUCATION"
+  },
+  {
+    "text": "[PROFESSIONAL EXPERIENCE] Security Engineer Intern at BlackPerl\nDuration: January 2026 \u2013 February 2026\nDescription: Worked in a production-grade cybersecurity environment aligned with industry practices. Gained exposure to real-world security operations and workflows.",
+    "section": "PROFESSIONAL EXPERIENCE"
+  },
+  {
+    "text": "[TECHNICAL SKILLS] Cybersecurity Tools: Nmap, Burp Suite, Metasploit, Wireshark, LinPEAS\nSOC / SIEM Tools: ELK Stack, Splunk\nOperating Systems: Kali Linux, Ubuntu, Windows\nNetworking: TCP/IP, DNS, Firewalls, IDS/IPS fundamentals",
+    "section": "TECHNICAL SKILLS"
+  },
+  {
+    "text": "[DEVELOPMENT SKILLS] Frontend: React, React Native, HTML, CSS, JavaScript, TailwindCSS, Angular\nBackend: Node.js, Express\nDatabases: SQL, MongoDB, Redis\nOther Technologies: Docker, TypeScript",
+    "section": "DEVELOPMENT SKILLS"
+  },
+  {
+    "text": "[CYBERSECURITY INTERESTS] SOC Operations\nVulnerability Assessment and Penetration Testing (VAPT)\nDigital Forensics and Incident Response (DFIR)\nThreat Hunting\nMalware Analysis\nSIEM Engineering\nSecurity Automation\nBlockchain Security",
+    "section": "CYBERSECURITY INTERESTS"
+  },
+  {
+    "text": "[PROJECTS] Project: TimeScope\nDescription: TimeScope is a real-time crypto and stock market analytics dashboard capable of tracking more than 50 financial assets.\nTechnologies: React, TypeScript, Node.js, Express, SQL, MongoDB, Redis, Docker\nFeatures:\n- Real-time asset monitoring\n- Multi-timeframe analytics (1 hour, 24 hour, 7 day)\n- AI assistant called TimeX using Google Gemini API",
+    "section": "PROJECTS"
+  },
+  {
+    "text": "[PROJECTS] - AI assistant called TimeX using Google Gemini API\n- Uses Retrieval-Augmented Generation (RAG) to provide AI-powered insights",
+    "section": "PROJECTS"
+  },
+  {
+    "text": "[PROJECTS] Project: Forensic Evidence Parsing Dashboard (FEPD)\nDescription: A digital forensics analysis system designed to automatically extract and analyze forensic artifacts.\nFeatures:\n- Automated artifact extraction\n- Timeline reconstruction\n- Log correlation\n- Evidence parsing\nSupported Platforms: Windows, Linux, macOS, Android, iOS",
+    "section": "PROJECTS"
+  },
+  {
+    "text": "[PROJECTS] Project: VaultCraft\nDescription: An AI-based Capture The Flag machine generator designed for cybersecurity training.\nFeatures:\n- Generates vulnerable machines\n- Uses more than 180 CVE vulnerability templates\n- Suggests automated exploitation chains\n- Designed for ethical hacking practice environments",
+    "section": "PROJECTS"
+  },
+  {
+    "text": "[PROJECTS] Project: NodeLink\nDescription: A real-time chat application with mobile-first architecture.\nTechnologies: Node.js backend, React Native frontend\nFeatures:\n- User authentication\n- Real-time messaging\n- Mobile optimized design",
+    "section": "PROJECTS"
+  },
+  {
+    "text": "[PROJECTS] Project: Portfolio with RAG Chatbot\nDescription: A personal portfolio website with an AI-powered chatbot that answers questions about Darshan using Retrieval-Augmented Generation.\nTechnologies: Next.js, React, TypeScript, Tailwind CSS, FastAPI, LangChain, FAISS, OpenAI, Sentence Transformers\nFeatures:\n- RAG pipeline allowing visitors to ask questions about Darshan's background",
+    "section": "PROJECTS"
+  },
+  {
+    "text": "[PROJECTS] - FAISS vector similarity search over personal profile data\n- OpenAI GPT for natural language response generation",
+    "section": "PROJECTS"
+  },
+  {
+    "text": "[CERTIFICATIONS] Fortinet FCF \u2013 Introduction to the Threat Landscape 3.0\nGoogle Cybersecurity Professional Certificate\nAdvent of Cyber 2025 \u2013 Completed 24 cybersecurity challenges\nCisco Certified Ethical Hacker (Introductory Level)\nEthical Hacking Essentials \u2013 EC-Council\nIntermediate Ethical Hacking\nPalo Alto \u2013 Cloud Security Fundamentals",
+    "section": "CERTIFICATIONS"
+  },
+  {
+    "text": "[HANDS-ON LEARNING PLATFORMS] TryHackMe Profile: darshan060224\nFocus Areas: Web vulnerabilities, Privilege escalation, Attack simulation labs\n\nHackviser VIP\nRanking: Top 3 percent percentile\nActivities: 24+ hours of cybersecurity lab work in a single week, Scenario-based cybersecurity challenges, Practical attack and defense exercises",
+    "section": "HANDS-ON LEARNING PLATFORMS"
+  },
+  {
+    "text": "[CONTACT] Feel free to reach out via email at darshan060224@gmail.com or LinkedIn for collaboration, job opportunities, or to chat about cybersecurity and tech!",
+    "section": "CONTACT"
+  }
+]
