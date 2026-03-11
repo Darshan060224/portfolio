@@ -132,8 +132,8 @@ export default function DeskHotspots() {
       {/* Hologram */}
       <Hotspot
         position={[-2.5, -0.8, -1]}
-        label="HOLOGRAM PROJECTOR"
-        description="Volumetric holographic identity system. Displays profile with floating data rings."
+        label="HOLOGRAM ASSISTANT"
+        description="AI-powered holographic assistant. Click '▶ ASK ME' to chat with the RAG system about Darshan's skills, projects, and experience."
         color="#FF2E88"
       />
     </group>
