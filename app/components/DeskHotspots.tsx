@@ -103,37 +103,37 @@ export default function DeskHotspots() {
     <group>
       {/* Studio Display */}
       <Hotspot
-        position={[4, 1.6, -2.5]}
+        position={[4.8, 0.1, -4.5]}
         label="STUDIO DISPLAY"
         description="5K Retina display running the RAG AI Terminal. Click the screen to interact with the AI assistant."
         color="#00E5FF"
       />
       {/* Mac Studio */}
       <Hotspot
-        position={[4.8, 0.15, -2.2]}
+        position={[6.0, -1.0, -4.2]}
         label="MAC STUDIO"
         description="M2 Ultra. Powers the local LLM inference engine and FAISS vector search."
         color="#7B61FF"
       />
       {/* Keyboard */}
       <Hotspot
-        position={[3.5, -0.05, -1.3]}
+        position={[4.5, -1.1, -3.5]}
         label="MAGIC KEYBOARD"
         description="Wireless keyboard with Touch ID. The command center for terminal interactions."
         color="#00FFA3"
       />
       {/* Coffee mug */}
       <Hotspot
-        position={[2.2, 0.2, -1.6]}
+        position={[3.8, -1.05, -3.4]}
         label="FUEL SUPPLY"
         description="Black coffee. Essential for late-night bug hunting and CTF competitions."
         color="#FFBD2E"
       />
       {/* Hologram */}
       <Hotspot
-        position={[1, -0.5, -1]}
+        position={[-2.5, -0.8, -1]}
         label="HOLOGRAM PROJECTOR"
-        description="Holographic identity system. Displays profile with real-time scan line shader effects."
+        description="Volumetric holographic identity system. Displays profile with floating data rings."
         color="#FF2E88"
       />
     </group>
