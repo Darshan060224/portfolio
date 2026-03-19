@@ -2,7 +2,8 @@
 
 import { Canvas, useFrame, useLoader } from "@react-three/fiber";
 import { OrbitControls, Html, RoundedBox, useTexture } from "@react-three/drei";
-import { Suspense, useRef, useMemo, useState } from "react";
+import { Suspense, useRef, useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import RAGTerminal from "./RAGTerminal";
 import WallDisplays from "./WallDisplays";
 import DeskHotspots from "./DeskHotspots";
@@ -12,74 +13,65 @@ import * as THREE from "three";
 
 /* ═══════════════════════════════════════════════
    LUXURY ROYAL DIAMOND WALLPAPER — procedural
+   Single canvas factory + per-wall repeat so all
+   walls show the same tile density regardless of
+   their actual world-space dimensions.
    ═══════════════════════════════════════════════ */
-function useDamaskTexture(w = 512, h = 512) {
+function makeDamaskCanvas(): HTMLCanvasElement {
+  const w = 512, h = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+
+  ctx.fillStyle = "#3D1E0A";
+  ctx.fillRect(0, 0, w, h);
+
+  const S = 80;
+  for (let row = 0; row * (S * 0.5) < h + S; row++) {
+    for (let col = 0; col * S < w + S; col++) {
+      const offsetX = (row % 2) * (S * 0.5);
+      const cx = col * S + offsetX;
+      const cy = row * (S * 0.5);
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - S * 0.38); ctx.lineTo(cx + S * 0.32, cy);
+      ctx.lineTo(cx, cy + S * 0.38); ctx.lineTo(cx - S * 0.32, cy);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(212,175,55,0.18)"; ctx.fill();
+      ctx.strokeStyle = "rgba(212,175,55,0.75)"; ctx.lineWidth = 1.2; ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - S * 0.22); ctx.lineTo(cx + S * 0.18, cy);
+      ctx.lineTo(cx, cy + S * 0.22); ctx.lineTo(cx - S * 0.18, cy);
+      ctx.closePath();
+      ctx.fillStyle = "rgba(212,175,55,0.10)"; ctx.fill();
+      ctx.strokeStyle = "rgba(255,215,80,0.55)"; ctx.lineWidth = 0.7; ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, S * 0.055, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(255,215,80,0.70)"; ctx.fill();
+    }
+  }
+
+  ctx.strokeStyle = "rgba(212,175,55,0.20)"; ctx.lineWidth = 0.6;
+  for (let x = -h; x < w + h; x += S) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + h, h); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x - h, h); ctx.stroke();
+  }
+  return canvas;
+}
+
+/** Create a wall texture with the correct repeat for a given face width in world units.
+ *  Target density: 1.5 tiles per unit wide, 0.8 tiles per unit tall (H=5). */
+function useDamaskTexture(worldW: number, worldH = 5) {
   return useMemo(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d")!;
-
-    // Deep rich brown background
-    ctx.fillStyle = "#3D1E0A";
-    ctx.fillRect(0, 0, w, h);
-
-    const S = 80;
-
-    // ── Gold diamond grid on brown background ──
-    for (let row = 0; row * (S * 0.5) < h + S; row++) {
-      for (let col = 0; col * S < w + S; col++) {
-        const offsetX = (row % 2) * (S * 0.5);
-        const cx = col * S + offsetX;
-        const cy = row * (S * 0.5);
-
-        // Outer diamond — solid gold fill
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - S * 0.38);
-        ctx.lineTo(cx + S * 0.32, cy);
-        ctx.lineTo(cx, cy + S * 0.38);
-        ctx.lineTo(cx - S * 0.32, cy);
-        ctx.closePath();
-        ctx.fillStyle = "rgba(212,175,55,0.18)";
-        ctx.fill();
-        ctx.strokeStyle = "rgba(212,175,55,0.75)";
-        ctx.lineWidth = 1.2;
-        ctx.stroke();
-
-        // Inner diamond — lighter gold
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - S * 0.22);
-        ctx.lineTo(cx + S * 0.18, cy);
-        ctx.lineTo(cx, cy + S * 0.22);
-        ctx.lineTo(cx - S * 0.18, cy);
-        ctx.closePath();
-        ctx.fillStyle = "rgba(212,175,55,0.10)";
-        ctx.fill();
-        ctx.strokeStyle = "rgba(255,215,80,0.55)";
-        ctx.lineWidth = 0.7;
-        ctx.stroke();
-
-        // Center gold dot
-        ctx.beginPath();
-        ctx.arc(cx, cy, S * 0.055, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(255,215,80,0.70)";
-        ctx.fill();
-      }
-    }
-
-    // ── Gold diagonal connecting lines ──
-    ctx.strokeStyle = "rgba(212,175,55,0.20)";
-    ctx.lineWidth = 0.6;
-    for (let x = -h; x < w + h; x += S) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + h, h); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x - h, h); ctx.stroke();
-    }
-
-    const tex = new THREE.CanvasTexture(canvas);
+    const tex = new THREE.CanvasTexture(makeDamaskCanvas());
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(6, 4);
+    tex.repeat.set(Math.round(worldW * 1.5), Math.round(worldH * 0.8));
     return tex;
-  }, [w, h]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [worldW, worldH]);
 }
 
 /* ═══════════════════════════════════════════════
@@ -87,7 +79,14 @@ function useDamaskTexture(w = 512, h = 512) {
    ═══════════════════════════════════════════════ */
 function Room() {
   const W = 14, D = 12, H = 5, T = 0.3;
-  const wallTex = useDamaskTexture();
+
+  // Each wall texture uses density-matched repeat so the pattern looks
+  // the same size on every wall regardless of their width.
+  const wallTexBack  = useDamaskTexture(W + T * 2, H);   // back wall   14.6 wide
+  const wallTexFront = useDamaskTexture(W / 2 - 0.8, H); // front half  ~6.2 wide
+  const wallTexSide4 = useDamaskTexture(4, H);            // side panels  4 wide
+  const wallTexSideW = useDamaskTexture(D, H);            // above/below strips (same depth)
+
 
   // ── pre-declare typed arrays to avoid TypeScript `as` inside JSX expressions ──
   type P3 = [number,number,number];
@@ -162,11 +161,7 @@ function Room() {
           <meshStandardMaterial color="#d4af37" roughness={0.3} metalness={0.6} />
         </mesh>
       ))}
-      {/* Center gold ring */}
-      <mesh rotation={[-Math.PI / 2, Math.PI / 4, 0]} position={[0, -1.991, 0]}>
-        <ringGeometry args={[1.1, 1.2, 4]} />
-        <meshStandardMaterial color="#d4af37" roughness={0.3} metalness={0.6} />
-      </mesh>
+      {/* Center gold ring — removed (caused gold V shape artifact on floor) */}
 
       {/* ── CEILING ── */}
       <mesh position={[0, H - 2, 0]}>
@@ -178,43 +173,43 @@ function Room() {
       {/* Back wall (z-) */}
       <mesh position={[0, H / 2 - 2, -D / 2 - T / 2]}>
         <boxGeometry args={[W + T * 2, H, T]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexBack} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Front wall left of door */}
       <mesh position={[-W / 4 - 0.6, H / 2 - 2, D / 2 + T / 2]}>
         <boxGeometry args={[W / 2 - 0.8, H, T]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexFront} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Front wall right of door */}
       <mesh position={[W / 4 + 0.6, H / 2 - 2, D / 2 + T / 2]}>
         <boxGeometry args={[W / 2 - 0.8, H, T]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexFront} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Door header */}
       <mesh position={[0, H - 2 - 0.4, D / 2 + T / 2]}>
         <boxGeometry args={[2.0, 0.8, T]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexFront} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* ── LEFT WALL (x-) — with window opening ── */}
       {/* Panel 1: front portion z=-6 to z=-2 */}
       <mesh position={[-W / 2 - T / 2, H / 2 - 2, -4]}>
         <boxGeometry args={[T, H, 4]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexSide4} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Panel 2: back portion z=2 to z=6 */}
       <mesh position={[-W / 2 - T / 2, H / 2 - 2, 4]}>
         <boxGeometry args={[T, H, 4]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexSide4} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Above window strip */}
       <mesh position={[-W / 2 - T / 2, 2.1, 0]}>
         <boxGeometry args={[T, 0.9, 4]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexSide4} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Below window strip */}
       <mesh position={[-W / 2 - T / 2, -1.1, 0]}>
         <boxGeometry args={[T, 1.8, 4]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexSide4} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Left wall window frame (wood) */}
       {leftWinFrame.map((b, i) => (
@@ -233,22 +228,22 @@ function Room() {
       {/* Panel 1: front portion */}
       <mesh position={[W / 2 + T / 2, H / 2 - 2, -4]}>
         <boxGeometry args={[T, H, 4]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexSide4} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Panel 2: back portion */}
       <mesh position={[W / 2 + T / 2, H / 2 - 2, 4]}>
         <boxGeometry args={[T, H, 4]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexSide4} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Above window strip */}
       <mesh position={[W / 2 + T / 2, 2.1, 0]}>
         <boxGeometry args={[T, 0.9, 4]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexSide4} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Below window strip */}
       <mesh position={[W / 2 + T / 2, -1.1, 0]}>
         <boxGeometry args={[T, 1.8, 4]} />
-        <meshStandardMaterial map={wallTex} color="#ffffff" roughness={0.85} metalness={0.03} />
+        <meshStandardMaterial map={wallTexSide4} color="#ffffff" roughness={0.85} metalness={0.03} />
       </mesh>
       {/* Right wall window frame (wood) */}
       {rightWinFrame.map((b, i) => (
@@ -348,161 +343,113 @@ const CONTACT_BUTTONS = [
    Panel sits flush against front wall (z = 5.97) left of door.
 ────────────────────────────────────────────────────────────────── */
 
-// Layout constants shared by canvas painter + hit-mesh placer
-const PANEL_W_U = 1.10;   // world units wide
-const PANEL_H_U = 1.20;   // world units tall
-const PANEL_CANVAS_W = 512;
-const PANEL_CANVAS_H = 558; // same aspect as world (512 / 1.10 * 1.20 ≈ 558)
-
-// Each button occupies 44% of panel width, 36% of panel height
-const BTN_REL_W = 0.44;
-const BTN_REL_H = 0.36;
-// Column centres (0 = left of panel centre, 1 = right)
-const COL_CX = [-0.245, 0.245]; // in world units from panel centre
-// Row centres (title row at top ~20%, button rows below)
-const ROW_CY = [0.27, -0.22];   // world units from panel centre (positive = up)
-
-function usePanelTexture(hoveredIdx: number) {
-  return useMemo(() => {
-    const W = PANEL_CANVAS_W, H = PANEL_CANVAS_H;
-    const c = document.createElement("canvas");
-    c.width = W; c.height = H;
-    const cx = c.getContext("2d")!;
-
-    // ── Background ──────────────────────────────────────────────
-    cx.fillStyle = "#111111";
-    cx.fillRect(0, 0, W, H);
-
-    // Gold outer border
-    cx.strokeStyle = "#D4AF37";
-    cx.lineWidth = 6;
-    cx.strokeRect(4, 4, W - 8, H - 8);
-
-    // ── Title ───────────────────────────────────────────────────
-    cx.fillStyle = "#D4AF37";
-    cx.font = "bold 28px monospace";
-    cx.textAlign = "center";
-    cx.fillText("◆  CONTACT  ◆", W / 2, 52);
-    // divider
-    cx.fillStyle = "#D4AF37";
-    cx.fillRect(30, 66, W - 60, 2);
-
-    // ── Buttons (2×2) ───────────────────────────────────────────
-    const buttons = CONTACT_BUTTONS;
-    // Map world-unit button positions to canvas pixels
-    const bwPx = BTN_REL_W * W;   // button width in pixels
-    const bhPx = BTN_REL_H * H;   // button height in pixels
-
-    // Canvas column centres
-    const colPx = [W * 0.27, W * 0.73];
-    // Canvas row centres (below title divider)
-    const rowPx = [H * 0.44, H * 0.80];
-
-    buttons.forEach((btn, i) => {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      const cx_ = colPx[col];
-      const cy_ = rowPx[row];
-      const bx = cx_ - bwPx / 2;
-      const by = cy_ - bhPx / 2;
-
-      const isHover = i === hoveredIdx;
-
-      // Button background plate
-      cx.fillStyle = isHover ? "#2a2a2a" : "#1d1d1d";
-      cx.fillRect(bx, by, bwPx, bhPx);
-      // Border
-      cx.strokeStyle = isHover ? btn.color : "#444444";
-      cx.lineWidth = isHover ? 3 : 1.5;
-      cx.strokeRect(bx + 1, by + 1, bwPx - 2, bhPx - 2);
-
-      // LED circle
-      const ledR = bwPx * 0.13;
-      const ledCx = cx_;
-      const ledCy = by + bhPx * 0.30;
-      cx.beginPath();
-      cx.arc(ledCx, ledCy, ledR, 0, Math.PI * 2);
-      cx.fillStyle = btn.color;
-      cx.fill();
-      // LED highlight
-      cx.beginPath();
-      cx.arc(ledCx - ledR * 0.3, ledCy - ledR * 0.3, ledR * 0.35, 0, Math.PI * 2);
-      cx.fillStyle = "rgba(255,255,255,0.55)";
-      cx.fill();
-
-      // Label text
-      cx.fillStyle = isHover ? "#ffffff" : "#cccccc";
-      cx.font = `bold ${Math.round(bwPx * 0.13)}px monospace`;
-      cx.textAlign = "center";
-      cx.fillText(btn.label, cx_, by + bhPx * 0.68);
-
-      // Sub-label (icon/service name)
-      cx.font = `${Math.round(bwPx * 0.10)}px monospace`;
-      cx.fillStyle = isHover ? btn.color : "#888888";
-      cx.fillText(btn.icon, cx_, by + bhPx * 0.86);
-    });
-
-    const tex = new THREE.CanvasTexture(c);
-    tex.needsUpdate = true;
-    return tex;
-  }, [hoveredIdx]);
-}
+const PANEL_W_U = 1.10;
+const PANEL_H_U = 1.20;
 
 function ContactSwitchPanel() {
-  const [hovered, setHovered] = useState(-1);
-  const panelTex = usePanelTexture(hovered);
-
-  // Hit-mesh centres in world units relative to panel group
-  const hitPositions: Array<[number, number, number]> = [
-    [COL_CX[0], ROW_CY[0], 0.025],
-    [COL_CX[1], ROW_CY[0], 0.025],
-    [COL_CX[0], ROW_CY[1], 0.025],
-    [COL_CX[1], ROW_CY[1], 0.025],
-  ];
-  const hitW = PANEL_W_U * BTN_REL_W;
-  const hitH = PANEL_H_U * BTN_REL_H;
-
   return (
-    // flush against inner face of front wall (wall at z=6, panel depth=0.04)
-    <group position={[-2.2, 0.0, 5.97]}>
-      {/* ── Panel plate ── */}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[PANEL_W_U, PANEL_H_U, 0.040]} />
-        <meshBasicMaterial color="#111111" />
+    <group position={[-2.2, 0.0, 5.92]}>
+      {/* Dark plate body */}
+      <mesh>
+        <boxGeometry args={[PANEL_W_U, PANEL_H_U, 0.04]} />
+        <meshBasicMaterial color="#0d0b1a" />
       </mesh>
-
-      {/* ── Baked canvas face ── */}
-      <mesh position={[0, 0, 0.022]}>
-        <planeGeometry args={[PANEL_W_U, PANEL_H_U]} />
-        <meshBasicMaterial map={panelTex} />
-      </mesh>
-
-      {/* ── Invisible hit meshes for hover + click ── */}
-      {CONTACT_BUTTONS.map((btn, i) => (
-        <mesh
-          key={btn.label}
-          position={hitPositions[i]}
-          onPointerOver={() => setHovered(i)}
-          onPointerOut={() => setHovered(-1)}
-          onClick={btn.action}
-        >
-          <planeGeometry args={[hitW, hitH]} />
-          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
-        </mesh>
-      ))}
-
-      {/* Warm glow light */}
-      <pointLight position={[0, 0, 0.8]} color="#FF9944" intensity={1.0} distance={2.5} decay={2} />
+      {/* Gold border strips */}
+      <mesh position={[0, 0.6, 0.022]}><boxGeometry args={[PANEL_W_U, 0.012, 0.002]} /><meshBasicMaterial color="#D4AF37" /></mesh>
+      <mesh position={[0, -0.6, 0.022]}><boxGeometry args={[PANEL_W_U, 0.012, 0.002]} /><meshBasicMaterial color="#D4AF37" /></mesh>
+      <mesh position={[-0.55, 0, 0.022]}><boxGeometry args={[0.012, PANEL_H_U, 0.002]} /><meshBasicMaterial color="#D4AF37" /></mesh>
+      <mesh position={[0.55, 0, 0.022]}><boxGeometry args={[0.012, PANEL_H_U, 0.002]} /><meshBasicMaterial color="#D4AF37" /></mesh>
+      {/* Html transform — scale=0.155 maps 400×450px → 1.10×1.24 world units (monitor ref: 600px×0.14=1.5u, so 1px=0.01786u at scale=0.14, scaled: w×56/px) */}
+      <Html transform position={[0, 0, 0.025]} scale={0.155}
+        style={{ width: "400px", height: "450px", pointerEvents: "auto" }}>
+        <div style={{
+          width: 400, height: 450,
+          background: "linear-gradient(160deg,#1a1230,#0d0820)",
+          display: "flex", flexDirection: "column",
+          alignItems: "center",
+          fontFamily: "monospace",
+          overflow: "hidden",
+        }}>
+          <div style={{ fontSize: 28, color: "#FFE066", letterSpacing: 8, marginTop: 24, fontWeight: "bold" }}>◆ CONTACT ◆</div>
+          <div style={{ width: "80%", height: 2, background: "#D4AF37", opacity: 0.6, margin: "10px 0" }} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, padding: "10px 24px", flex: 1, alignItems: "center" }}>
+            {CONTACT_BUTTONS.map((btn) => (
+              <button key={btn.label} onClick={btn.action}
+                style={{ background: "#1d1840", border: `3px solid ${btn.color}`, borderRadius: 10, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "18px 8px", gap: 8 }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#2d2560")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#1d1840")}
+              >
+                <div style={{ fontSize: 36, filter: `drop-shadow(0 0 6px ${btn.color})` }}>{btn.icon}</div>
+                <div style={{ fontSize: 22, color: "#fff", fontWeight: "bold" }}>{btn.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </Html>
+      <pointLight position={[0, 0, 0.8]} color="#cc8833" intensity={0.8} distance={2.0} decay={2} />
     </group>
   );
 }
 
 
 /* ═══════════════════════════════════════════════
-   ANIMATED DOOR — swings open on click
-   Hinge at x=+0.85 (right side of door opening)
-   Closed = 0°, Open = -85°
+   RESUME MAILBOX — wall-mounted right of door
+   Click → opens Google Drive resume folder
    ═══════════════════════════════════════════════ */
+function ResumeBox() {
+  const openDrive = () => window.open(
+    "https://drive.google.com/drive/folders/10YAXBVTsql7WFJt0UNEacG7vWBkxRPzW?usp=sharing",
+    "_blank"
+  );
+  return (
+    <group position={[2.0, 0.2, 5.92]}>
+      {/* Box body */}
+      <mesh>
+        <boxGeometry args={[0.52, 0.38, 0.08]} />
+        <meshBasicMaterial color="#1a1000" />
+      </mesh>
+      {/* Gold border strips */}
+      <mesh position={[0, 0.19, 0.041]}><boxGeometry args={[0.52, 0.012, 0.003]} /><meshBasicMaterial color="#FFD700" /></mesh>
+      <mesh position={[0, -0.19, 0.041]}><boxGeometry args={[0.52, 0.012, 0.003]} /><meshBasicMaterial color="#FFD700" /></mesh>
+      <mesh position={[-0.254, 0, 0.041]}><boxGeometry args={[0.012, 0.38, 0.003]} /><meshBasicMaterial color="#FFD700" /></mesh>
+      <mesh position={[0.254, 0, 0.041]}><boxGeometry args={[0.012, 0.38, 0.003]} /><meshBasicMaterial color="#FFD700" /></mesh>
+      {/* Mail slot */}
+      <mesh position={[0, -0.02, 0.043]}><boxGeometry args={[0.28, 0.035, 0.005]} /><meshBasicMaterial color="#000" /></mesh>
+      {/* Html — click opens Google Drive */}
+      <Html transform position={[0, 0, 0.05]} scale={0.155}
+        style={{ width: "195px", height: "143px", pointerEvents: "auto" }}>
+        <div
+          onClick={openDrive}
+          style={{
+            width: 195, height: 143,
+            background: "linear-gradient(160deg,#1a1000,#0f0800)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            cursor: "pointer", gap: 10,
+            fontFamily: "monospace",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "linear-gradient(160deg,#2a1a00,#1a0a00)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "linear-gradient(160deg,#1a1000,#0f0800)")}
+        >
+          <div style={{ fontSize: 42 }}>📮</div>
+          <div style={{ fontSize: 20, fontWeight: "bold", color: "#FFD700", letterSpacing: 4 }}>RESUME</div>
+          <div style={{ width: "70%", height: 1, background: "rgba(255,215,0,0.4)" }} />
+          <div style={{ fontSize: 12, color: "rgba(255,215,0,0.7)", letterSpacing: 2 }}>◆ VIEW CV ◆</div>
+        </div>
+      </Html>
+      {/* Corner screws */}
+      {([[-0.22, 0.15], [0.22, 0.15], [-0.22, -0.15], [0.22, -0.15]] as [number,number][]).map(([sx, sy], i) => (
+        <mesh key={i} position={[sx, sy, 0.043]}>
+          <circleGeometry args={[0.012, 8]} />
+          <meshBasicMaterial color="#FFD700" />
+        </mesh>
+      ))}
+      <pointLight position={[0, 0, 0.5]} color="#FFD700" intensity={0.6} distance={1.0} decay={2} />
+    </group>
+  );
+}
+
+
 function Door({ doorOpen, onToggle }: { doorOpen: boolean; onToggle: () => void }) {
   const groupRef = useRef<THREE.Group>(null!);
   const H = 5, D = 12, T = 0.3;
@@ -606,9 +553,268 @@ function Desk() {
 }
 
 /* ═══════════════════════════════════════════════
+   RESUME ASSISTANT MODAL — AI chat about resume
+   Portal-renders above canvas, ESC to close
+   ═══════════════════════════════════════════════ */
+function ResumeModal({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  const [messages, setMessages] = useState<{role:"user"|"ai"; text:string}[]>([
+    { role: "ai", text: "📮 Welcome! I'm Darshan's Resume Assistant.\n\nAsk me anything about his skills, projects, certifications, or experience.\n\nTry: \"What projects has Darshan built?\" or \"What are his cybersecurity skills?\"" },
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null!);
+
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  async function send() {
+    const q = input.trim();
+    if (!q || loading) return;
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", text: q }]);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: q }),
+      });
+      const data = await res.json();
+      const reply = data.reply || data.error || "No response received.";
+      setMessages(prev => [...prev, { role: "ai", text: reply }]);
+    } catch {
+      setMessages(prev => [...prev, { role: "ai", text: "⚠ Could not reach the AI server. Make sure rag_server.py is running." }]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const QUICK = ["What are Darshan's skills?", "Tell me about AetherScan", "What certifications does he have?", "Describe his experience"];
+
+  if (!mounted || typeof document === "undefined") return null;
+
+  const overlay = (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 99999,
+        background: "rgba(0,5,15,0.93)",
+        backdropFilter: "blur(8px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        width: "min(820px, 95vw)", maxHeight: "90vh",
+        background: "#0a0f1c",
+        border: "2px solid rgba(212,175,55,0.35)",
+        borderRadius: "14px",
+        boxShadow: "0 0 60px rgba(212,175,55,0.1), inset 0 0 30px rgba(0,0,0,0.5)",
+        display: "flex", flexDirection: "column",
+        overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "12px 18px",
+          background: "linear-gradient(90deg, #111827 60%, #1a1200)",
+          borderBottom: "1px solid rgba(212,175,55,0.15)",
+        }}>
+          <div style={{ fontSize: 22 }}>📮</div>
+          <div>
+            <div style={{ fontFamily: "monospace", fontSize: 13, color: "#D4AF37", letterSpacing: 3 }}>RESUME ASSISTANT</div>
+            <div style={{ fontFamily: "monospace", fontSize: 9, color: "rgba(212,175,55,0.5)", letterSpacing: 2 }}>DARSHAN U — CYBERSECURITY · AI · FULLSTACK</div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#00ffa3" }} />
+            <div style={{ fontFamily: "monospace", fontSize: 9, color: "#00ffa3" }}>RAG ONLINE</div>
+          </div>
+          <button onClick={() => window.open("https://drive.google.com/drive/folders/10YAXBVTsql7WFJt0UNEacG7vWBkxRPzW","_blank")}
+            style={{ marginLeft: 12, background: "rgba(212,175,55,0.1)", border: "1px solid rgba(212,175,55,0.3)", color: "#D4AF37", borderRadius: 6, padding: "3px 10px", fontFamily: "monospace", fontSize: 10, cursor: "pointer", letterSpacing: 1 }}>
+            ↗ Drive
+          </button>
+          <button onClick={onClose}
+            style={{ marginLeft: 6, background: "none", border: "1px solid rgba(212,175,55,0.2)", color: "rgba(212,175,55,0.7)", borderRadius: 6, padding: "3px 10px", fontFamily: "monospace", fontSize: 10, cursor: "pointer" }}>
+            ESC ✕
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }}>
+          {messages.map((m, i) => (
+            <div key={i} style={{
+              maxWidth: "82%",
+              alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+              background: m.role === "user"
+                ? "linear-gradient(135deg, rgba(212,175,55,0.15), rgba(212,175,55,0.05))"
+                : "#111827",
+              border: m.role === "user"
+                ? "1px solid rgba(212,175,55,0.2)"
+                : "1px solid rgba(255,255,255,0.05)",
+              borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+              padding: "10px 14px",
+              fontFamily: "monospace", fontSize: 13, lineHeight: 1.7,
+              color: m.role === "user" ? "#D4AF37" : "#e6f1ff",
+              whiteSpace: "pre-wrap",
+            }}>
+              {m.role === "ai" && <div style={{ fontSize: 10, color: "rgba(212,175,55,0.6)", display: "block", marginBottom: 4, letterSpacing: 2 }}>◆ RESUME AI</div>}
+              {m.text}
+            </div>
+          ))}
+          {loading && (
+            <div style={{ alignSelf: "flex-start", background: "#111827", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "14px 14px 14px 4px", padding: "10px 14px", fontFamily: "monospace", fontSize: 13, color: "rgba(212,175,55,0.5)" }}>
+              <div style={{ fontSize: 10, color: "rgba(212,175,55,0.6)", display: "block", marginBottom: 4, letterSpacing: 2 }}>◆ RESUME AI</div>
+              ⟳ searching resume…
+            </div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+
+        {/* Quick questions */}
+        {messages.length <= 1 && (
+          <div style={{ padding: "0 18px 10px", display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {QUICK.map(q => (
+              <button key={q} onClick={() => { setInput(q); }}
+                style={{ background: "rgba(212,175,55,0.07)", border: "1px solid rgba(212,175,55,0.2)", color: "rgba(212,175,55,0.8)", borderRadius: 20, padding: "4px 12px", fontFamily: "monospace", fontSize: 10, cursor: "pointer" }}>
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Input */}
+        <div style={{ display: "flex", gap: 8, padding: "10px 18px 14px", borderTop: "1px solid rgba(212,175,55,0.1)", background: "#111827" }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") send(); }}
+            disabled={loading}
+            placeholder="Ask about skills, projects, experience…"
+            autoFocus
+            style={{
+              flex: 1, background: "#0a0f1c", border: "1px solid rgba(212,175,55,0.2)",
+              borderRadius: 8, padding: "8px 12px", fontFamily: "monospace", fontSize: 12,
+              color: "#D4AF37", outline: "none",
+            }}
+          />
+          <button onClick={send} disabled={loading || !input.trim()}
+            style={{
+              background: "linear-gradient(135deg, #D4AF37, #8B7020)",
+              border: "none", borderRadius: 8, padding: "8px 18px",
+              fontFamily: "monospace", fontSize: 11, color: "#0a0f1c",
+              fontWeight: "bold", cursor: "pointer", opacity: (loading || !input.trim()) ? 0.4 : 1,
+            }}>
+            ASK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(overlay, document.body);
+}
+
+/* ═══════════════════════════════════════════════
+   MONITOR MODAL — full-screen terminal overlay
+   Portal-renders above canvas, ESC to close
+   ═══════════════════════════════════════════════ */
+function MonitorModal({ onClose }: { onClose: () => void }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  if (!mounted || typeof document === "undefined") return null;
+
+  const overlay = (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 99999,
+        background: "rgba(0,5,15,0.92)",
+        backdropFilter: "blur(8px)",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Monitor chrome bezel */}
+      <div style={{
+        width: "min(900px, 94vw)", maxHeight: "92vh",
+        background: "#0a0f1c",
+        border: "2px solid rgba(0,229,255,0.25)",
+        borderRadius: "14px",
+        boxShadow: "0 0 60px rgba(0,229,255,0.12), inset 0 0 30px rgba(0,0,0,0.5)",
+        overflow: "hidden",
+        display: "flex", flexDirection: "column",
+      }}>
+        {/* Title bar */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "10px",
+          padding: "10px 16px",
+          background: "#111827",
+          borderBottom: "1px solid rgba(0,229,255,0.1)",
+        }}>
+          {/* macOS dots */}
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FF5F57" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#FFBD2E" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#28C840" }} />
+          <div style={{ fontFamily: "monospace", fontSize: 12, color: "#8892b0", marginLeft: 8 }}>
+            darshan@portfolio — AI Terminal
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginLeft: "auto" }}>
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#00ffa3" }} />
+            <div style={{ fontFamily: "monospace", fontSize: 10, color: "#00ffa3" }}>RAG ONLINE</div>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              marginLeft: 16, background: "none", border: "1px solid rgba(0,229,255,0.2)",
+              color: "#00e5ff", borderRadius: 6, padding: "2px 10px",
+              fontFamily: "monospace", fontSize: 11, cursor: "pointer",
+            }}
+          >
+            ESC ✕
+          </button>
+        </div>
+        {/* Terminal content — full size RAGTerminal */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "0" }}>
+          <RAGTerminal fullscreen />
+        </div>
+        {/* Bottom status bar */}
+        <div style={{
+          padding: "6px 16px",
+          background: "#0a0f1c",
+          borderTop: "1px solid rgba(0,229,255,0.08)",
+          display: "flex", gap: 16, alignItems: "center",
+        }}>
+          <div style={{ fontFamily: "monospace", fontSize: 10, color: "rgba(0,229,255,0.4)" }}>
+            ◆ Powered by FAISS + LLaMA 3.2 (local)
+          </div>
+          <div style={{ fontFamily: "monospace", fontSize: 10, color: "rgba(0,229,255,0.3)", marginLeft: "auto" }}>
+            Click outside or press ESC to close
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(overlay, document.body);
+}
+
+/* ═══════════════════════════════════════════════
    APPLE STUDIO DISPLAY — glass bezel, aluminum
    ═══════════════════════════════════════════════ */
-function StudioDisplay() {
+function StudioDisplay({ onOpen }: { onOpen: () => void }) {
+  const [hovered, setHovered] = useState(false);
   return (
     <group position={[4.8, -0.4, -4.5]}>
       {/* Screen body */}
@@ -622,9 +828,23 @@ function StudioDisplay() {
       </mesh>
       {/* Screen content */}
       <Html transform occlude="blending" position={[0, 0, 0.025]} scale={0.14}
-        style={{ width: "600px", height: "370px", overflow: "hidden" }}>
+        style={{ width: "600px", height: "370px", overflow: "hidden", pointerEvents: "none" }}>
         <RAGTerminal />
       </Html>
+      {/* Invisible click target over screen */}
+      <mesh
+        position={[0, 0, 0.028]}
+        onPointerOver={() => { setHovered(true); if (typeof document !== "undefined") document.body.style.cursor = "pointer"; }}
+        onPointerOut={() => { setHovered(false); if (typeof document !== "undefined") document.body.style.cursor = ""; }}
+        onClick={onOpen}
+      >
+        <planeGeometry args={[1.44, 0.84]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+      {/* Hover glow ring */}
+      {hovered && (
+        <pointLight position={[0, 0, 0.2]} color="#00e5ff" intensity={0.6} distance={1.5} decay={2} />
+      )}
       {/* Chin bezel */}
       <mesh position={[0, -0.48, 0]}>
         <boxGeometry args={[1.5, 0.06, 0.04]} />
@@ -1017,12 +1237,14 @@ function useScanlineTexture() {
     const W = 2, H = 256;
     const canvas = document.createElement("canvas");
     canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, W, H);
-    for (let y = 0; y < H; y += 3) {
-      ctx.fillStyle = "rgba(0,229,255,0.12)";
-      ctx.fillRect(0, y, W, 1);
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, W, H);
+      for (let y = 0; y < H; y += 3) {
+        ctx.fillStyle = "rgba(0,229,255,0.12)";
+        ctx.fillRect(0, y, W, 1);
+      }
     }
     const tex = new THREE.CanvasTexture(canvas);
     tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -1330,13 +1552,15 @@ function HologramChatOverlay({ onClose }: { onClose: () => void }) {
 function SceneContent() {
   const [chatOpen, setChatOpen] = useState(false);
   const [doorOpen, setDoorOpen] = useState(false);
+  const [monitorOpen, setMonitorOpen] = useState(false);
 
   return (
     <>
       <Room />
       <Door doorOpen={doorOpen} onToggle={() => setDoorOpen((v) => !v)} />
       <Desk />
-      <StudioDisplay />
+      <StudioDisplay onOpen={() => setMonitorOpen(true)} />
+      {monitorOpen && <MonitorModal onClose={() => setMonitorOpen(false)} />}
       <MacStudio />
       <MagicKeyboard />
       <MagicTrackpad />
@@ -1348,6 +1572,7 @@ function SceneContent() {
       <HologramAssistant onChatOpen={() => setChatOpen(true)} />
       {chatOpen && <HologramChatOverlay onClose={() => setChatOpen(false)} />}
       <ContactSwitchPanel />
+      <ResumeBox />
       <WallDisplays />
       <DeskHotspots />
       <CyberParticles />

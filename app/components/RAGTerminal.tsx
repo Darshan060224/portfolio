@@ -28,7 +28,7 @@ const QUICK_COMMANDS: Record<string, string> = {
   contact: "How can I contact Darshan?",
 };
 
-export default function RAGTerminal() {
+export default function RAGTerminal({ fullscreen }: { fullscreen?: boolean }) {
   const [lines, setLines] = useState<TerminalLine[]>(WELCOME_LINES);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -146,7 +146,7 @@ export default function RAGTerminal() {
   return (
     <div
       onClick={() => inputRef.current?.focus()}
-      className="w-full max-w-2xl rounded-xl border border-[#00E5FF]/20 bg-[#0A0F1C]/95 shadow-2xl shadow-[#00E5FF]/5 backdrop-blur-sm overflow-hidden cursor-text"
+      className={`w-full rounded-xl border border-[#00E5FF]/20 bg-[#0A0F1C]/95 shadow-2xl shadow-[#00E5FF]/5 backdrop-blur-sm overflow-hidden cursor-text${fullscreen ? " h-full" : " max-w-2xl"}`}
     >
       {/* Title bar */}
       <div className="flex items-center gap-2 border-b border-white/5 bg-[#111827] px-4 py-2.5">
@@ -165,7 +165,7 @@ export default function RAGTerminal() {
       </div>
 
       {/* Terminal body */}
-      <div className="h-80 overflow-y-auto p-4 font-mono text-sm leading-relaxed scrollbar-thin">
+      <div className={`overflow-y-auto p-4 font-mono text-sm leading-relaxed scrollbar-thin${fullscreen ? " h-[calc(100vh-200px)]" : " h-80"}`}>
         {lines.map((line, i) => (
           <div key={i} className="whitespace-pre-wrap">
             {line.type === "prompt" ? (

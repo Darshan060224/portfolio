@@ -2,6 +2,7 @@
 
 import { Html } from "@react-three/drei";
 import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import * as THREE from "three";
 
 /* ══════════════════════════════════════════════════════════════
@@ -378,48 +379,66 @@ function ExpandedOverlay({ title, onClose, children }: {
   children: React.ReactNode;
 }) {
   const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Animate in
-  useEffect(() => { const t = setTimeout(() => setVisible(true), 10); return () => clearTimeout(t); }, []);
+  useEffect(() => {
+    setMounted(true);
+    const t = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(t);
+  }, []);
 
   // Close on ESC key
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  return (
-    <Html fullscreen style={{ pointerEvents: "auto" }}>
-      {/* Backdrop */}
+  if (!mounted || typeof document === "undefined") return null;
+
+  const overlay = (
+    <>
+      {/* Global styles for keyframe + scrollbar */}
+      <style>{`
+        @keyframes pulse-dot {
+          0%, 100% { opacity: 1; box-shadow: 0 0 8px #00e5ff; }
+          50% { opacity: 0.4; box-shadow: 0 0 3px #00e5ff; }
+        }
+        .portfolio-overlay-scroll::-webkit-scrollbar { width: 4px; }
+        .portfolio-overlay-scroll::-webkit-scrollbar-track { background: transparent; }
+        .portfolio-overlay-scroll::-webkit-scrollbar-thumb { background: rgba(200,164,72,0.3); }
+      `}</style>
+
+      {/* Backdrop — covers entire viewport including canvas */}
       <div
         onClick={onClose}
         style={{
-          position: "fixed", inset: 0, zIndex: 9999,
-          background: "rgba(2, 6, 12, 0.92)",
-          backdropFilter: "blur(10px) brightness(0.4)",
+          position: "fixed", inset: 0, zIndex: 99999,
+          background: "rgba(2, 6, 12, 0.94)",
+          backdropFilter: "blur(12px)",
           display: "flex", alignItems: "center", justifyContent: "center",
           transition: "opacity 0.25s",
           opacity: visible ? 1 : 0,
         }}
       >
-        {/* Panel */}
+        {/* Panel card */}
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
-            width: "min(680px, 92vw)",
-            maxHeight: "85vh",
+            width: "min(700px, 92vw)",
+            maxHeight: "88vh",
             display: "flex",
             flexDirection: "column",
             background: "linear-gradient(170deg, #050d18 0%, #090e1a 60%, #0a0a0f 100%)",
             border: "1px solid rgba(180,140,50,0.55)",
-            boxShadow: "0 0 0 1px rgba(0,180,255,0.08), 0 0 60px rgba(0,140,255,0.12), inset 0 0 40px rgba(0,0,0,0.6)",
-            transform: visible ? "translateY(0) scale(1)" : "translateY(24px) scale(0.97)",
-            transition: "transform 0.28s cubic-bezier(0.22,1,0.36,1), opacity 0.25s",
+            boxShadow: "0 0 0 1px rgba(0,180,255,0.08), 0 0 80px rgba(0,140,255,0.15), inset 0 0 40px rgba(0,0,0,0.6)",
+            transform: visible ? "translateY(0) scale(1)" : "translateY(28px) scale(0.96)",
+            transition: "transform 0.3s cubic-bezier(0.22,1,0.36,1), opacity 0.25s",
             opacity: visible ? 1 : 0,
           }}
         >
-          {/* ── Header bar ── */}
+          {/* ── Header ── */}
           <div style={{
             padding: "14px 24px",
             borderBottom: "1px solid rgba(200,164,72,0.3)",
@@ -427,87 +446,53 @@ function ExpandedOverlay({ title, onClose, children }: {
             display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px",
             flexShrink: 0,
           }}>
-            {/* Left: status dot + title */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
               <span style={{
-                width: "8px", height: "8px", borderRadius: "50%",
-                background: "#00e5ff",
-                boxShadow: "0 0 8px #00e5ff",
-                flexShrink: 0,
+                width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0,
+                background: "#00e5ff", boxShadow: "0 0 8px #00e5ff",
                 animation: "pulse-dot 2s ease-in-out infinite",
               }} />
-              <span style={{
-                fontFamily: "monospace", fontSize: "11px",
-                letterSpacing: "3px", color: "rgba(200,164,72,0.7)",
-                textTransform: "uppercase",
-              }}>PORTFOLIO // </span>
-              <span style={{
-                fontFamily: "'Georgia', serif", fontSize: "18px",
-                fontWeight: "bold", color: "#e8d9b0",
-                letterSpacing: "1px",
-              }}>{title}</span>
+              <span style={{ fontFamily: "monospace", fontSize: "11px", letterSpacing: "3px", color: "rgba(200,164,72,0.7)", whiteSpace: "nowrap" }}>
+                PORTFOLIO //&nbsp;
+              </span>
+              <span style={{ fontFamily: "Georgia, serif", fontSize: "18px", fontWeight: "bold", color: "#e8d9b0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {title}
+              </span>
             </div>
-            {/* Right: close button */}
             <button
               onClick={onClose}
               style={{
-                background: "transparent",
-                border: "1px solid rgba(200,164,72,0.4)",
-                color: "rgba(200,164,72,0.8)",
-                fontFamily: "monospace", fontSize: "11px",
-                letterSpacing: "2px", padding: "5px 14px",
-                cursor: "pointer",
-                transition: "all 0.15s",
-                flexShrink: 0,
+                background: "transparent", border: "1px solid rgba(200,164,72,0.4)",
+                color: "rgba(200,164,72,0.8)", fontFamily: "monospace", fontSize: "11px",
+                letterSpacing: "2px", padding: "5px 14px", cursor: "pointer", flexShrink: 0,
               }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "rgba(200,164,72,0.15)";
-                (e.currentTarget as HTMLButtonElement).style.color = "#e8d080";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(200,164,72,0.8)";
-              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(200,164,72,0.15)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
             >
               ESC ✕
             </button>
           </div>
 
-          {/* ── Scrollable content ── */}
-          <div style={{
-            padding: "28px 28px 24px",
-            overflowY: "auto",
-            flex: 1,
-          }}>
+          {/* ── Content ── */}
+          <div className="portfolio-overlay-scroll" style={{ padding: "28px 28px 24px", overflowY: "auto", flex: 1 }}>
             {children}
           </div>
 
           {/* ── Footer ── */}
           <div style={{
-            padding: "10px 24px",
-            borderTop: "1px solid rgba(200,164,72,0.2)",
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            flexShrink: 0,
+            padding: "10px 24px", borderTop: "1px solid rgba(200,164,72,0.2)",
+            display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0,
           }}>
-            <span style={{ fontFamily: "monospace", fontSize: "10px", color: "rgba(0,229,255,0.4)", letterSpacing: "2px" }}>
-              DARSHAN U // PORTFOLIO
-            </span>
-            <span style={{ fontFamily: "monospace", fontSize: "10px", color: "rgba(200,164,72,0.4)", letterSpacing: "2px" }}>
-              PRESS ESC OR CLICK OUTSIDE TO CLOSE
-            </span>
+            <span style={{ fontFamily: "monospace", fontSize: "10px", color: "rgba(0,229,255,0.4)", letterSpacing: "2px" }}>DARSHAN U // PORTFOLIO</span>
+            <span style={{ fontFamily: "monospace", fontSize: "10px", color: "rgba(200,164,72,0.4)", letterSpacing: "2px" }}>PRESS ESC OR CLICK OUTSIDE TO CLOSE</span>
           </div>
         </div>
       </div>
-
-      {/* Keyframe for pulsing dot */}
-      <style>{`
-        @keyframes pulse-dot {
-          0%, 100% { opacity: 1; box-shadow: 0 0 8px #00e5ff; }
-          50% { opacity: 0.4; box-shadow: 0 0 3px #00e5ff; }
-        }
-      `}</style>
-    </Html>
+    </>
   );
+
+  // Portal to document.body so it renders ABOVE the Three.js canvas
+  return createPortal(overlay, document.body);
 }
 
 /* ══════════════════════════════════════════════════════════════
